@@ -1,0 +1,15 @@
+name = "WebSignals"
+uuid = "349ef902-387d-4643-bd1b-125067241d07"
+authors = ["Pere Giménez <gimenezfebrer@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+StateSignals = "cc7ea9f4-611f-50b7-86a5-d62288be5013"
+
+[compat]
+HTTP = "1.10.12"
+JSON = "0.21.4"
+StateSignals = "0.1.0"
+julia = "1.10"
