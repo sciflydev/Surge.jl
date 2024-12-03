@@ -1,5 +1,7 @@
 # Surge.jl
 
+[![Test workflow status](https://github.com/sciflydev/Surge.jl/actions/workflows/Test.yml/badge.svg?branch=main)](https://github.com/sciflydev/Surge.jl/actions/workflows/Test.yml?query=branch%3Amain)
+
 A package that exposes reactive state via WebSockets, enabling real-time synchronization between Julia backends and web clients. It uses [StateSignals.jl](https://github.com/sciflydev/StateSignals.jl) for managing reactive states, and exposes their values via websockets.
 
 ## Example

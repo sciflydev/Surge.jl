@@ -1,18 +1,18 @@
 using Test
-using WebSignals
+using Surge
 using HTTP
 using JSON
 using StateSignals
 
-@testset "WebSignals tests" begin
+@testset "Surge tests" begin
     @testset "Signal attachment" begin
         # Create and attach a signal
         counter = Signal(0, :counter)
         attached = attach_websocket(counter)
         
         # Test that signal was added to signal_map
-        @test haskey(WebSignals.signal_map, counter.id)
-        @test WebSignals.signal_map[counter.id] === counter
+        @test haskey(Surge.signal_map, counter.id)
+        @test Surge.signal_map[counter.id] === counter
     end
 
     @testset "WebSocket server" begin
@@ -68,8 +68,8 @@ using StateSignals
         stop_server(servers)
         
         # Verify cleanup
-        @test isempty(WebSignals.client_sockets)
-        @test isempty(WebSignals.signal_map)
+        @test isempty(Surge.client_sockets)
+        @test isempty(Surge.signal_map)
         
         # Verify servers stopped
         @show servers.http.state
