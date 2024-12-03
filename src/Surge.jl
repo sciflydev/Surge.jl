@@ -1,4 +1,4 @@
-module WebSignals
+module Surge
 
 using StateSignals  
 using JSON
