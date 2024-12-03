@@ -25,7 +25,7 @@ map(attach_websocket, [counter, countertwo, total, word])
 server=start_server(8080)
 ```
 
-Open the file `index.html` in the `example` folder. You'll see the signal values and controls to modify them.
+Open the file `index.html` in the `example` folder. You'll see the signal values and controls to modify them. When the counter variables are modified, messages will be printed to the REPL.
 
 Alternatively, you can send websocket messages as
 
