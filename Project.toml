@@ -9,4 +9,7 @@ JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 StateSignals = "cc7ea9f4-611f-50b7-86a5-d62288be5013"
 
 [compat]
+HTTP = "1.10.12"
+JSON = "0.21.4"
+StateSignals = "0.2.0"
 julia = "1.10"
