@@ -39,7 +39,7 @@ Starts the WebSocket server using HTTP.jl on the specified port.
 function start_websocket_server(port)
     println("Starting WebSocket server on port $port...")
     server = HTTP.WebSockets.listen("127.0.0.1", port) do ws
-        push!(connexted_clients, ws)
+        push!(connected_clients, ws)
         client_signal_map = deepcopy(signal_map)
         attach_websocket(collect(values(client_signal_map)), ws)
         try
@@ -53,7 +53,7 @@ function start_websocket_server(port)
                 handle_message(ws, msg, client_signal_map)  
             end
         finally
-            delete!(conneted_clients, ws)
+            delete!(connected_clients, ws)
             close(ws)
         end
     end
