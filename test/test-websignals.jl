@@ -5,32 +5,24 @@ using JSON
 using StateSignals
 
 @testset "Surge tests" begin
-    @testset "Signal attachment" begin
-        # Create and attach a signal
-        counter = Signal(0, :counter)
-        attached = attach_websocket(counter)
-        
-        # Test that signal was added to signal_map
-        @test haskey(Surge.signal_map, counter.id)
-        @test Surge.signal_map[counter.id] === counter
-    end
 
     @testset "WebSocket server" begin
         # Start server on test port
         test_port = 8082
-        server = start_websocket_server(test_port)
         
         # Create test signal
         counter = Signal(42, :test_counter)
-        attach_websocket(counter)
         
+        server = start_server([counter], test_port; async=true)
+        sleep(1)
+
         # Connect test client
         client = HTTP.WebSockets.open("ws://127.0.0.1:$test_port") do ws
             # Should receive initial state
-            msg = JSON.parse(String(HTTP.WebSockets.receive(ws)))
-            @test msg["type"] == "update"
-            @test msg["id"] == "test_counter"
-            @test msg["value"] == 42
+            answer = JSON.parse(String(HTTP.WebSockets.receive(ws)))
+            @test answer["type"] == "update"
+            @test answer["id"] == "test_counter"
+            @test answer["value"] == 42
             
             # Test sending update from client
             update_msg = JSON.json(Dict(
@@ -39,42 +31,51 @@ using StateSignals
                 "value" => 100
             ))
             HTTP.WebSockets.send(ws, update_msg)
-            
+
+            println("set to 100")
+            answer = JSON.parse(String(HTTP.WebSockets.receive(ws)))
+            @show answer
+            @test answer["type"] == "ACK"
+            answer = JSON.parse(String(HTTP.WebSockets.receive(ws)))
+            @show answer
+            @test answer["value"] == 100
+
+            println("get value")
+            update_msg = JSON.json(Dict(
+                "type" => "get",
+                "id" => "test_counter",
+            ))
+            HTTP.WebSockets.send(ws, update_msg)
+            answer = JSON.parse(String(HTTP.WebSockets.receive(ws)))
+            @show answer
+            @test answer["value"] == 100
             # Wait briefly for update to process
-            sleep(0.1)
-            
             # Verify signal was updated
-            @test counter() == 100
             
         end
         
         # Clean up
-        Base.schedule(server, InterruptException(); error=true)
+        stop_server(server)
     end
 
     @testset "Server start/stop" begin
-        # Start both servers
-        servers = start_server(8083)
-        
-        # Verify servers are running
-        @test servers.http.state == :runnable
-        @test servers.websocket.state == :runnable
         
         # Create and attach test signal
         test_signal = Signal("test", :test)
-        attach_websocket(test_signal)
+
+        server = start_server([test_signal], 8083; async=true)
+        sleep(1)
         
-        # Stop servers and verify cleanup
-        stop_server(servers)
+        @test server.state == :runnable
+        
+        stop_server(server)
+        sleep(0.5)
         
         # Verify cleanup
-        @test isempty(Surge.client_sockets)
+        @test isempty(Surge.connected_clients)
         @test isempty(Surge.signal_map)
         
         # Verify servers stopped
-        @show servers.http.state
-        @show servers.websocket.state
-        @test servers.http.state == :failed
-        @test servers.websocket.state == :failed
+        @test server.state == :failed
     end
 end

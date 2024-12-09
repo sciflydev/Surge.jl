@@ -21,9 +21,8 @@ effect(() -> println("Counter updated to ", counter()))
 effect(() -> println("Countertwo updated to ", countertwo()))
 effect(() -> println("Total is ", total()))
 
-map(expose_signal, [counter, countertwo, total, word])
 
-server=start_server(8080)
+server = start_server([counter, countertwo, total, word], 8080)
 ```
 
 Open the file `index.html` in the `example` folder. You'll see the signal values and controls to modify them. When the counter variables are modified, messages will be printed to the REPL.
@@ -34,7 +33,7 @@ Alternatively, you can send websocket messages as
 using HTTP.WebSockets
 using JSON
 
-WebSockets.open("ws://localhost:8081") do ws
+WebSockets.open("ws://localhost:8080'") do ws
     # Send an update message
     update_msg = JSON.json(Dict(
         "type" => "update",

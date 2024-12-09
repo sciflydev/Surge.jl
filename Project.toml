@@ -1,7 +1,7 @@
 name = "Surge"
 uuid = "349ef902-387d-4643-bd1b-125067241d07"
 authors = ["Pere Giménez <gimenezfebrer@gmail.com>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
