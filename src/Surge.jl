@@ -4,25 +4,31 @@ using StateSignals
 using JSON
 using HTTP  
 
-export start_websocket_server, attach_websocket, start_server, stop_server
+export start_websocket_server, attach_websocket, start_server, stop_server, expose_signal
 export Signal, effect, @signal, computed, infalidate, pull!
 
 const signal_map = Dict{Symbol, StateSignals.Signal}()
 
-const client_sockets = Set{HTTP.WebSockets.WebSocket}()
+const connected_clients = Set{HTTP.WebSockets.WebSocket}()
 
-function attach_websocket(signal::Signal)
+function expose_signal(signal::Signal)
     signal_map[signal.id] = signal
+    return signal
+end
+
+function attach_websocket(signal::Signal, ws::HTTP.WebSockets.WebSocket)
     
     effect(() -> begin
         val = signal()
         msg = JSON.json(Dict("type" => "update", "id" => string(signal.id), "value" => val))
-        for ws in client_sockets
-            WebSockets.send(ws, msg)
-        end
+        WebSockets.send(ws, msg)
     end)
     
     return signal
+end
+
+function attach_websocket(signals::Vector{Signal}, ws::HTTP.WebSockets.WebSocket)
+    map(signal -> attach_websocket(signal, ws), signals)
 end
 
 """
@@ -32,59 +38,60 @@ Starts the WebSocket server using HTTP.jl on the specified port.
 """
 function start_websocket_server(port)
     println("Starting WebSocket server on port $port...")
-    server = @async HTTP.WebSockets.listen("127.0.0.1", port) do ws
-        push!(client_sockets, ws)
+    server = HTTP.WebSockets.listen("127.0.0.1", port) do ws
+        push!(connexted_clients, ws)
+        client_signal_map = deepcopy(signal_map)
+        attach_websocket(collect(values(client_signal_map)), ws)
         try
             # Send initial state of all signals to the new client
-            for (id, signal) in signal_map
-                msg = JSON.json(Dict("type" => "update", "id" => string(id), "value" => signal()))
+            for (_, signal) in client_signal_map
+                msg = JSON.json(Dict("type" => "update", "id" => string(signal.id), "value" => signal()))
                 WebSockets.send(ws, msg)
             end
             
-            for msg in ws  
-                handle_message(ws, msg)  
+            for msg in ws
+                handle_message(ws, msg, client_signal_map)  
             end
         finally
-            delete!(client_sockets, ws)
+            delete!(conneted_clients, ws)
             close(ws)
         end
     end
     return server
 end
 
-function handle_message(ws::HTTP.WebSockets.WebSocket, msg)
+function handle_message(ws::HTTP.WebSockets.WebSocket, msg, client_signal_map)
     data = JSON.parse(msg)  
     if data["type"] == "update"
         id = Symbol(data["id"])
         val = data["value"]
         if haskey(signal_map, id)
-            signal = signal_map[id]
-            signal(val)  
+           client_signal_map[id](val)
         end
+        msg = JSON.json(Dict("type" => "ACK"))
+        WebSockets.send(ws, msg)
     end
 end
 
 function start_server(port=8080)
     ws_server = start_websocket_server(port)
-    return (http= http_server, websocket= ws_server)
+    return ws_server
 end
 
 """
     stop_server(servers)
 
-Stops both the HTTP and WebSocket servers and cleans up connections.
-Takes the tuple returned by start_server().
+Stops the WebSocket server and cleans up connections.
 """
-function stop_server(servers)
+function stop_server(server)
     # Close all websocket connections
-    for ws in client_sockets
+    for ws in connected_clients
         close(ws)
     end
-    empty!(client_sockets)
+    empty!(connected_clients)
     
-    # Stop both servers
-    Base.schedule(servers.http, InterruptException(); error=true)
-    Base.schedule(servers.websocket, InterruptException(); error=true)
+    # Stop server
+    Base.schedule(server, InterruptException(); error=true)
     
     # Clear signal map
     empty!(signal_map)

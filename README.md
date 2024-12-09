@@ -21,7 +21,8 @@ effect(() -> println("Counter updated to ", counter()))
 effect(() -> println("Countertwo updated to ", countertwo()))
 effect(() -> println("Total is ", total()))
 
-map(attach_websocket, [counter, countertwo, total, word])
+map(expose_signal, [counter, countertwo, total, word])
+
 server=start_server(8080)
 ```
 
