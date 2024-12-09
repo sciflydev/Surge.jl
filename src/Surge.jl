@@ -65,15 +65,7 @@ function handle_message(ws::HTTP.WebSockets.WebSocket, msg)
 end
 
 function start_server(port=8080)
-    http_server = @async HTTP.serve(port) do request::HTTP.Request
-        if request.target == "/"
-            return HTTP.Response(200, read(joinpath("index.html")))
-        else
-            return HTTP.Response(404)
-        end
-    end
-
-    ws_server = start_websocket_server(port+1)
+    ws_server = start_websocket_server(port)
     return (http= http_server, websocket= ws_server)
 end
 
