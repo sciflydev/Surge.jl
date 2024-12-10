@@ -4,12 +4,14 @@
 
 A package that exposes reactive state via WebSockets, enabling real-time synchronization between Julia backends and web clients. It uses [StateSignals.jl](https://github.com/sciflydev/StateSignals.jl) for managing reactive states, and exposes their values via websockets.
 
+You can find [here](https://github.com/sciflydev/IrisSurge) a demo application with a `Surge.jl` backend and a VueJS frontend. See it live [here](https://iris.carryall.app/) with a VueJS frontend.
+
 ## Example
 
 Define some signals and start the server:
 
 ```julia
-using Surge: Signal, computed, effect
+using Surge: Signal, computed, effect, start_server
 
 counter = Signal(0,:counter)
 countertwo = Signal(6,:countertwo)
@@ -25,9 +27,7 @@ effect(() -> println("Total is ", total()))
 server = start_server([counter, countertwo, total, word], 8080)
 ```
 
-Open the file `index.html` in the `example` folder. You'll see the signal values and controls to modify them. When the counter variables are modified, messages will be printed to the REPL.
-
-Alternatively, you can send websocket messages as
+You can now send websocket messages as
 
 ```julia
 using HTTP.WebSockets
@@ -46,3 +46,5 @@ WebSockets.open("ws://localhost:8080'") do ws
     println("Received: ", response)
 end
 ```
+
+You'll see in the REPL that the effects are triggered and the total is updated.
