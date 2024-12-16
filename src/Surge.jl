@@ -5,7 +5,7 @@ using JSON
 using HTTP  
 
 export start_websocket_server, attach_websocket, start_server, stop_server, expose_signal
-export Signal, effect, @signal, computed, invalidate, pull!
+export Signal, Resource, effect, @signal, computed, invalidate, pull!,
 
 const signal_map = Dict{Symbol, StateSignals.Signal}()
 
